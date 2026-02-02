@@ -3,31 +3,40 @@ import pandas as pd
 import numpy as np
 
 def process_data(df):
-    # 1. Round off decimals in specific columns
-    cols_to_round = ['CarpetArea(SQ.FT)', 'Min. APR', 'Max APR', 'Average of APR', 'Median of APR']
+    # Clean column names: remove leading/trailing spaces and handle internal spacing issues
+    df.columns = df.columns.str.strip()
     
-    # Ensure columns exist before rounding to avoid errors
-    existing_cols = [col for col in cols_to_round if col in df.columns]
-    df[existing_cols] = df[existing_cols].round(2)
+    # 1. Round off decimals in specific columns
+    # Using a flexible list to match your exact naming
+    cols_to_round = ['Carpet Area(SQ.FT)', 'Min. APR', 'Max APR', 'Average of APR', 'Median of APR']
+    
+    # Check for columns and round them if they exist
+    for col in cols_to_round:
+        if col in df.columns:
+            df[col] = pd.to_numeric(df[col], errors='coerce').round(2)
 
-    # 2. Define the CarpetArea(SQ.FT) ranges
-    # You can adjust the bins/labels based on your specific project needs
-    if 'CarpetArea(SQ.FT)' in df.columns:
-        bins = [0, 40, 60, 80, 100, 150, 500]
+    # 2. Define the Carpet Area (SQ.MT) ranges
+    # Standardizing the name for Carpet Area (SQ.MT)
+    sq_mt_col = 'Carpet Area (SQ.MT)'
+    
+    if sq_mt_col in df.columns:
+        # Converting to numeric just in case there are strings/nulls
+        df[sq_mt_col] = pd.to_numeric(df[sq_mt_col], errors='coerce')
+        
+        bins = [0, 40, 60, 80, 100, 150, 1000]
         labels = ['0-40', '40-60', '60-80', '80-100', '100-150', '150+']
-        df['Area Range (SQ.FT)'] = pd.cut(df['CarpetArea(SQ.FT)'], bins=bins, labels=labels)
+        df['Area Range (SQ.MT)'] = pd.cut(df[sq_mt_col], bins=bins, labels=labels)
 
         # 3. Grouping logic
-        grouped = df.groupby('Area Range (SQ.FT)').agg({
+        grouped = df.groupby('Area Range (SQ.MT)', observed=False).agg({
             'Min. APR': 'min',
             'Max APR': 'max',
             'Average of APR': 'mean'
         }).reset_index()
         
-        # Round the new average calculation
         grouped['Average of APR'] = grouped['Average of APR'].round(2)
     else:
-        st.error("Column 'CarpetArea(SQ.FT)' not found.")
+        st.error(f"Column '{sq_mt_col}' not found. Available columns are: {list(df.columns)}")
         return df, None
 
     # 4. Remove Median APR column
