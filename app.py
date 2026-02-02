@@ -4,18 +4,18 @@ import numpy as np
 
 def process_data(df):
     # 1. Round off decimals in specific columns
-    cols_to_round = ['Carpet Area(SQ.FT)', 'Min. APR', 'Max APR', 'Average of APR', 'Median of APR']
+    cols_to_round = ['CarpetArea(SQ.FT)', 'Min. APR', 'Max APR', 'Average of APR', 'Median of APR']
     
     # Ensure columns exist before rounding to avoid errors
     existing_cols = [col for col in cols_to_round if col in df.columns]
     df[existing_cols] = df[existing_cols].round(2)
 
-    # 2. Define the Carpet Area (SQ.FT) ranges
+    # 2. Define the CarpetArea(SQ.FT) ranges
     # You can adjust the bins/labels based on your specific project needs
-    if 'Carpet Area (SQ.FT)' in df.columns:
+    if 'CarpetArea(SQ.FT)' in df.columns:
         bins = [0, 40, 60, 80, 100, 150, 500]
         labels = ['0-40', '40-60', '60-80', '80-100', '100-150', '150+']
-        df['Area Range (SQ.FT)'] = pd.cut(df['Carpet Area (SQ.FT)'], bins=bins, labels=labels)
+        df['Area Range (SQ.FT)'] = pd.cut(df['CarpetArea(SQ.FT)'], bins=bins, labels=labels)
 
         # 3. Grouping logic
         grouped = df.groupby('Area Range (SQ.FT)').agg({
@@ -27,7 +27,7 @@ def process_data(df):
         # Round the new average calculation
         grouped['Average of APR'] = grouped['Average of APR'].round(2)
     else:
-        st.error("Column 'Carpet Area (SQ.FT)' not found.")
+        st.error("Column 'CarpetArea(SQ.FT)' not found.")
         return df, None
 
     # 4. Remove Median APR column
