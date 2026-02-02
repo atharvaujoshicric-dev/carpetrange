@@ -10,15 +10,15 @@ def process_data(df):
     existing_cols = [col for col in cols_to_round if col in df.columns]
     df[existing_cols] = df[existing_cols].round(2)
 
-    # 2. Define the Carpet Area (SQ.MT) ranges
+    # 2. Define the Carpet Area (SQ.FT) ranges
     # You can adjust the bins/labels based on your specific project needs
-    if 'Carpet Area (SQ.MT)' in df.columns:
+    if 'Carpet Area (SQ.FT)' in df.columns:
         bins = [0, 40, 60, 80, 100, 150, 500]
         labels = ['0-40', '40-60', '60-80', '80-100', '100-150', '150+']
-        df['Area Range (SQ.MT)'] = pd.cut(df['Carpet Area (SQ.MT)'], bins=bins, labels=labels)
+        df['Area Range (SQ.FT)'] = pd.cut(df['Carpet Area (SQ.FT)'], bins=bins, labels=labels)
 
         # 3. Grouping logic
-        grouped = df.groupby('Area Range (SQ.MT)').agg({
+        grouped = df.groupby('Area Range (SQ.FT)').agg({
             'Min. APR': 'min',
             'Max APR': 'max',
             'Average of APR': 'mean'
@@ -27,7 +27,7 @@ def process_data(df):
         # Round the new average calculation
         grouped['Average of APR'] = grouped['Average of APR'].round(2)
     else:
-        st.error("Column 'Carpet Area (SQ.MT)' not found.")
+        st.error("Column 'Carpet Area (SQ.FT)' not found.")
         return df, None
 
     # 4. Remove Median APR column
