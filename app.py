@@ -3,48 +3,50 @@ import pandas as pd
 import io
 
 def process_data(df):
-    # Clean column names
+    # Clean column names to handle any hidden spaces
     df.columns = df.columns.str.strip()
     
-    # Mapping exact column names from your request
+    # Required Column Mapping
     prop_col = 'Property'
     config_col = 'Configuration'
     carpet_col = 'Carpet Area(SQ.FT)'
     apr_col = 'Average of APR'
     
-    # Check if required columns exist
+    # Validation
     required = [prop_col, config_col, carpet_col, apr_col]
-    missing = [c for c in required if c not in df.columns]
-    if missing:
-        st.error(f"Missing columns in 'Summary' sheet: {missing}")
+    if not all(col in df.columns for col in required):
+        st.error(f"Please check column names. Need: {required}")
         return None
 
-    # 1. Ensure numeric data and round off (remove decimals)
+    # Ensure numeric types for calculation
     df[carpet_col] = pd.to_numeric(df[carpet_col], errors='coerce')
     df[apr_col] = pd.to_numeric(df[apr_col], errors='coerce')
 
-    # 2. Grouping Logic: Combine similar configs for each property
-    # We calculate: Min Carpet, Max Carpet, Avg APR, and Total Count
-    summary_report = df.groupby([prop_col, config_col]).agg(
+    # Grouping by Property, then Configuration
+    # We calculate Min Carpet, Sum of APR, and the Count (Total units)
+    summary = df.groupby([prop_col, config_col]).agg(
         Min_Carpet=(carpet_col, 'min'),
-        Max_Carpet=(carpet_col, 'max'),
-        Avg_APR=(apr_col, 'mean'),
-        Total_Count=(config_col, 'count')
+        Total_APR_Sum=(apr_col, 'sum'),
+        Unit_Count=(config_col, 'count')
     ).reset_index()
 
-    # 3. Final Rounding (Removing decimals)
-    summary_report['Min_Carpet'] = summary_report['Min_Carpet'].round(0)
-    summary_report['Max_Carpet'] = summary_report['Max_Carpet'].round(0)
-    summary_report['Avg_APR'] = summary_report['Avg_APR'].round(0)
-    summary_report['Total_Count'] = summary_report['Total_Count'].astype(int)
+    # Calculate Manual Avg APR: (Sum of APRs / Total Count)
+    summary['Calculated Avg APR'] = summary['Total_APR_Sum'] / summary['Unit_Count']
 
-    return summary_report
+    # Rounding and Formatting (Removing Decimals)
+    summary['Min_Carpet'] = summary['Min_Carpet'].round(0).astype(int)
+    summary['Calculated Avg APR'] = summary['Calculated Avg APR'].round(0).astype(int)
+    
+    # Final cleanup: removing the helper sum column before showing the user
+    final_report = summary[[prop_col, config_col, 'Min_Carpet', 'Calculated Avg APR', 'Unit_Count']]
+    
+    return final_report
 
-# Streamlit UI Setup
-st.set_page_config(page_title="Project Config Reporter", layout="wide")
-st.title("Real Estate Project Configuration Summary")
+# Streamlit Interface
+st.set_page_config(page_title="Real Estate Summary Tool", layout="wide")
+st.title("Property & Configuration Summarizer")
 
-uploaded_file = st.file_uploader("Upload your Excel/CSV file", type=['xlsx', 'csv'])
+uploaded_file = st.file_uploader("Upload Summary Excel", type=['xlsx', 'csv'])
 
 if uploaded_file:
     try:
@@ -53,23 +55,24 @@ if uploaded_file:
         else:
             df = pd.read_excel(uploaded_file, sheet_name='Summary')
 
-        report_df = process_data(df)
+        result_df = process_data(df)
 
-        if report_df is not None:
-            st.subheader("Property-wise Configuration Report")
-            st.dataframe(report_df, use_container_width=True)
+        if result_df is not None:
+            st.subheader("Summarized Report")
+            # Displaying the data
+            st.dataframe(result_df, use_container_width=True)
 
-            # Create Excel Download in memory
+            # Export Logic
             buffer = io.BytesIO()
             with pd.ExcelWriter(buffer, engine='openpyxl') as writer:
-                report_df.to_excel(writer, index=False, sheet_name='Config Summary')
+                result_df.to_excel(writer, index=False, sheet_name='Property Report')
             
             st.download_button(
-                label="📥 Download New Sheet as Excel",
+                label="📥 Download Summarized Sheet",
                 data=buffer.getvalue(),
-                file_name="Project_Configuration_Report.xlsx",
+                file_name="Property_Config_Summary.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
                 
     except Exception as e:
-        st.error(f"Error: {e}. Please ensure the sheet 'Summary' exists and column names match.")
+        st.error(f"Error processing file: {e}")
