@@ -53,7 +53,6 @@ Atharva Joshi"""
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-# --- ADDED: LINK TO SPYDARR DASHBOARD ---
 st.markdown("""
 <div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; border-left: 5px solid #ff4b4b; margin-bottom: 20px;'>
     <strong>Need the base summary first?</strong> 
@@ -96,20 +95,20 @@ if uploaded_file:
                 else f"{int(round(x['min_carpet']))}-{int(round(x['max_carpet']))}", axis=1
             )
 
-            # Weighted Avg & Rounding to 0 decimals
-            report_df['Average of APR'] = (report_df['temp_sum_apr'] / report_df['Count of Property']).round(0).astype(int)
-            for col in ['Min APR', 'Max APR', 'Count of Property', 'Total Count']:
-                report_df[col] = report_df[col].round(0).astype(int)
+            # --- FIX FOR NON-FINITE VALUES ---
+            # Replace NaN/Inf with 0 before rounding and converting to int
+            report_df['Average of APR'] = (report_df['temp_sum_apr'] / report_df['Count of Property']).fillna(0)
+            
+            numeric_cols = ['Min APR', 'Max APR', 'Average of APR', 'Count of Property', 'Total Count']
+            for col in numeric_cols:
+                report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
             final_df = report_df[['Property', 'Last Completion Date', 'Configuration', 'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 'Count of Property', 'Total Count']]
 
-            
-            # --- EXCEL STYLING ---
             # --- EXCEL STYLING ---
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                # This line must be indented further than the 'with' line above
                 final_df.to_excel(writer, index=False, sheet_name='Report')
                 ws = writer.book['Report']
                 
@@ -120,10 +119,10 @@ if uploaded_file:
                 
                 # Apply alignment and borders to all rows (including headers)
                 last_row = len(final_df) + 1
-                for r in range(1, last_row + 1): # Start at 1 for headers
+                for r in range(1, last_row + 1): 
                     for c in range(1, 10):
                         cell = ws.cell(row=r, column=c)
-                        cell.alignment = center_align # Center & Middle
+                        cell.alignment = center_align 
                         cell.border = thin_border
 
                 # Property-specific merging and coloring logic
@@ -158,6 +157,11 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
+            
+            # Added a standard download button as backup
+            st.sidebar.download_button(label="📥 Download Excel Report", 
+                                       data=file_content, 
+                                       file_name="Spydarr_Summary_to_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
