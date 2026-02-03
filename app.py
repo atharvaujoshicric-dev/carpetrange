@@ -157,11 +157,6 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-            
-            # Added a standard download button as backup
-            st.sidebar.download_button(label="📥 Download Excel Report", 
-                                       data=file_content, 
-                                       file_name="Spydarr_Summary_to_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
