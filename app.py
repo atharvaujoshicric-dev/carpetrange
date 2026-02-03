@@ -108,7 +108,7 @@ if uploaded_file:
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 final_df.to_excel(writer, index=False, sheet_name='Report')
-                ws = writer.book['report']
+                ws = writer.book['Report']
                 
                 center_align = Alignment(horizontal='center', vertical='center')
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
