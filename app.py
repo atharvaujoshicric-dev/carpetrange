@@ -143,10 +143,8 @@ if uploaded_file:
             if st.sidebar.button("Send to Email") and recipient:
                 full_email = f"{recipient.strip().lower()}@beyondwalls.com"
                 with st.spinner(f'Sending to {full_email}...'):
-                    if send_email(full_email, file_content, "Spydarr_Market_Report.xlsx"):
+                    if send_email(full_email, file_content, "Spydarr_Summary to Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-
-            st.download_button(label="📥 Download Excel Report", data=file_content, file_name="Spydarr_Property_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
