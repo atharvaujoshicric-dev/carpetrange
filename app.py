@@ -104,9 +104,6 @@ if uploaded_file:
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
             final_df = report_df[['Property', 'Last Completion Date', 'Configuration', 'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 'Count of Property', 'Total Count']]
 
-            st.subheader("Styled Preview")
-            st.dataframe(final_df)
-
             # --- EXCEL STYLING ---
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
