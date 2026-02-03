@@ -11,7 +11,7 @@ uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 if uploaded_file:
     try:
         # 1. Load the summary sheet
-        df = pd.read_excel(uploaded_file, sheet_name='summary')
+        df = pd.read_excel(uploaded_file, sheet_name='Summary')
 
         # 2. Handle Merged Cells: Fill Property and Total Count downwards
         df['Property'] = df['Property'].ffill()
