@@ -10,14 +10,13 @@ from email.mime.text import MIMEText
 from email.utils import formataddr
 from email import encoders
 
-# --- EMAIL CONFIGURATION (From your provided logic) ---
+# --- EMAIL CONFIGURATION ---
 SENDER_EMAIL = "atharvaujoshi@gmail.com"
 SENDER_NAME = "Spydarr Summary to Report" 
-APP_PASSWORD = "nybl zsnx zvdw edqr"  # Note: Ensure this is kept secure
+APP_PASSWORD = "nybl zsnx zvdw edqr"  
 
 def send_email(recipient_email, excel_data, filename):
     try:
-        # Dynamic recipient name logic from your code
         recipient_name = recipient_email.split('@')[0].replace('.', ' ').title()
         
         msg = MIMEMultipart()
@@ -50,8 +49,17 @@ Atharva Joshi"""
         st.error(f"Error sending email: {e}")
         return False
 
+# --- STREAMLIT UI SETUP ---
 st.set_page_config(page_title="Property Report Tool", layout="wide")
-st.title("🏙️ Real Estate Summary to Report")
+st.title("🏙️Spydarr's Summary to Report")
+
+# --- ADDED: LINK TO SPYDARR DASHBOARD ---
+st.markdown("""
+<div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; border-left: 5px solid #ff4b4b; margin-bottom: 20px;'>
+    <strong>Need the base summary first?</strong> 
+    <a href="https://spydarr.streamlit.app/" target="_blank">To get the summary click here: Spydarr Dashboard</a>
+</div>
+""", unsafe_allow_html=True)
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 
@@ -99,7 +107,7 @@ if uploaded_file:
             st.subheader("Styled Preview")
             st.dataframe(final_df)
 
-            # --- EXCEL STYLING (Alignment, Borders, Merging) ---
+            # --- EXCEL STYLING ---
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
                 final_df.to_excel(writer, index=False, sheet_name='report')
@@ -107,7 +115,7 @@ if uploaded_file:
                 
                 center_align = Alignment(horizontal='center', vertical='center')
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-                colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"] # Your Spydarr palette
+                colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
                 
                 last_row = len(final_df) + 1
                 for r in range(1, last_row + 1):
@@ -143,7 +151,7 @@ if uploaded_file:
             if st.sidebar.button("Send to Email") and recipient:
                 full_email = f"{recipient.strip().lower()}@beyondwalls.com"
                 with st.spinner(f'Sending to {full_email}...'):
-                    if send_email(full_email, file_content, "Spydarr_Summary to Report.xlsx"):
+                    if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
 
     except Exception as e:
