@@ -35,7 +35,7 @@ if uploaded_file:
 
         # Formatting the date to match 'Aug-28' style if needed
         # Change this line in your code:
-report_df['Last Completion Date'] = pd.to_datetime(report_df['Last Completion Date'], dayfirst=True).dt.strftime('%b-%y')
+        report_df['Last Completion Date'] = pd.to_datetime(report_df['Last Completion Date'], dayfirst=True).dt.strftime('%b-%y')
 
         st.subheader("Preview of Generated Report")
         st.dataframe(report_df)
