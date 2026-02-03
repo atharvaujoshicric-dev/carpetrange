@@ -107,7 +107,7 @@ if uploaded_file:
             # --- EXCEL STYLING ---
             output = BytesIO()
             with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                final_df.to_excel(writer, index=False, sheet_name='report')
+                final_df.to_excel(writer, index=False, sheet_name='Report')
                 ws = writer.book['report']
                 
                 center_align = Alignment(horizontal='center', vertical='center')
