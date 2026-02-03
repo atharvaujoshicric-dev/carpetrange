@@ -104,39 +104,50 @@ if uploaded_file:
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
             final_df = report_df[['Property', 'Last Completion Date', 'Configuration', 'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 'Count of Property', 'Total Count']]
 
+            
             # --- EXCEL STYLING ---
-            output = BytesIO()
-            with pd.ExcelWriter(output, engine='openpyxl') as writer:
-                final_df.to_excel(writer, index=False, sheet_name='Report')
-                ws = writer.book['Report']
+output = BytesIO()
+with pd.ExcelWriter(output, engine='openpyxl') as writer:
+    final_df.to_excel(writer, index=False, sheet_name='Report')
+    ws = writer.book['Report']
+    
+    center_align = Alignment(horizontal='center', vertical='center')
+    thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
+                         top=Side(style='thin'), bottom=Side(style='thin'))
+    colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
+    
+    # 1. APPLY ALIGNMENT AND BORDERS TO ALL ROWS AND COLUMNS
+    last_row = len(final_df) + 1
+    last_col = len(final_df.columns)
+    
+    for r in range(1, last_row + 1): # Starts from row 1 (Header)
+        for c in range(1, last_col + 1):
+            cell = ws.cell(row=r, column=c)
+            cell.alignment = center_align # Aligns everything Center & Middle
+            cell.border = thin_border
+            
+    # 2. PROPERTY-SPECIFIC STYLING (Merging and Coloring)
+    current_prop, start_row, color_idx = None, 2, 0
+    for row_num in range(2, last_row + 2):
+        row_prop = ws.cell(row=row_num, column=1).value
+        if row_prop != current_prop or row_num == last_row + 1:
+            if current_prop is not None:
+                end_row = row_num - 1
+                fill = PatternFill(start_color=colors[color_idx % len(colors)], fill_type="solid")
+                for r_fill in range(start_row, end_row + 1):
+                    for c_fill in range(1, last_col + 1): 
+                        ws.cell(row=r_fill, column=c_fill).fill = fill
                 
-                center_align = Alignment(horizontal='center', vertical='center')
-                thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))
-                colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
+                if end_row > start_row:
+                    ws.merge_cells(start_row=start_row, start_column=1, end_row=end_row, end_column=1)
+                    ws.merge_cells(start_row=start_row, start_column=9, end_row=end_row, end_column=9)
                 
-                last_row = len(final_df) + 1
-                for r in range(1, last_row + 1):
-                    for c in range(1, 10):
-                        cell = ws.cell(row=r, column=c)
-                        cell.alignment = center_align
-                        cell.border = thin_border
-
-                current_prop, start_row, color_idx = None, 2, 0
-                for row_num in range(2, last_row + 2):
-                    row_prop = ws.cell(row=row_num, column=1).value
-                    if row_prop != current_prop or row_num == last_row + 1:
-                        if current_prop is not None:
-                            end_row = row_num - 1
-                            fill = PatternFill(start_color=colors[color_idx % len(colors)], fill_type="solid")
-                            for r_fill in range(start_row, end_row + 1):
-                                for c_fill in range(1, 10): ws.cell(row=r_fill, column=c_fill).fill = fill
-                            if end_row > start_row:
-                                ws.merge_cells(start_row=start_row, start_column=1, end_row=end_row, end_column=1)
-                                ws.merge_cells(start_row=start_row, start_column=9, end_row=end_row, end_column=9)
-                            color_idx += 1
-                        start_row, current_prop = row_num, row_prop
-                
-                for col in ws.columns: ws.column_dimensions[col[0].column_letter].width = 20
+                color_idx += 1
+            start_row, current_prop = row_num, row_prop
+    
+    # Auto-adjust column width
+    for col in ws.columns:
+        ws.column_dimensions[col[0].column_letter].width = 20
 
             file_content = output.getvalue()
 
