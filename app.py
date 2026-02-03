@@ -7,7 +7,7 @@ from openpyxl.utils import get_column_letter
 
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 
-st.title("🏙️ Real Estate Summary to Report")
+st.title("🏙️Spydarr's Summary to Report")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 
@@ -121,7 +121,7 @@ if uploaded_file:
             st.download_button(
                 label="📥 Download Bordered & Styled Report",
                 data=output.getvalue(),
-                file_name="Property_Report_Final.xlsx",
+                file_name="Spydarr_Report_Final.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             )
 
