@@ -156,7 +156,7 @@ if uploaded_file:
                 full_email = f"{recipient.strip().lower()}@beyondwalls.com"
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
-                        st.sidebar.success(f"Report sent to {full_email}"
+                        st.sidebar.success(f"Report sent to {full_email}")
 
     except Exception as e:
         st.error(f"Error: {e}")
