@@ -43,8 +43,15 @@ def send_email(recipient_email, excel_data, filename):
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-    
-    st.markdown("<div style='margin-top: -15px; margin-bottom: 10px;'><span style='background-color: #FFFF00; padding: 2px 8px; border-radius: 4px; border: 1px solid #E6E600; font-size: 0.9em; color: black;'><u><strong>NOTE :-</strong> Before Uploading the Summary Cross-Check it.</u></span></div>
+# Fixed Indentation and String Closing here
+st.markdown("""
+<div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; border-left: 5px solid #ff4b4b; margin-bottom: 20px;'>
+    <div style='margin-bottom: 10px;'>
+        <span style='background-color: #FFFF00; padding: 2px 8px; border-radius: 4px; border: 1px solid #E6E600; font-size: 0.9em; color: black;'>
+            <u><strong>NOTE :-</strong> Before Uploading the Summary Cross-Check it.</u>
+        </span>
+    </div>
+    <strong>Need the base summary first?</strong> 
     <a href="https://spydarr.streamlit.app/" target="_blank">To get the summary click here: Spydarr Dashboard</a>
 </div>
 """, unsafe_allow_html=True)
@@ -138,7 +145,6 @@ if uploaded_file:
                             end_row_prop = row_num - 1
                             fill = PatternFill(start_color=colors[color_idx % len(colors)], fill_type="solid")
                             
-                            # Color the property group rows
                             for r_fill in range(start_row_prop, end_row_prop + 1):
                                 for c_fill in range(1, last_col + 1): 
                                     ws.cell(row=r_fill, column=c_fill).fill = fill
@@ -164,7 +170,7 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-
+            
 
     except Exception as e:
         st.error(f"Error: {e}")
