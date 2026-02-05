@@ -43,15 +43,10 @@ def send_email(recipient_email, excel_data, filename):
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-# Fixed Indentation and String Closing here
-st.markdown("""
-        <span style='background-color: #FFFF00; padding: 2px 8px; border-radius: 4px; border: 1px solid #E6E600; font-size: 0.9em; color: black;'>
-            <u><strong>NOTE :-</strong> Before Uploading the Summary Cross-Check it.</u>
-    <strong>Need the base summary first?</strong> 
-<div>
-    <a href="https://spydarr.streamlit.app/" target="_blank">To get the summary click here: Spydarr Dashboard</a>
-</div>
-""", unsafe_allow_html=True)
+# REMOVED BOX: Used clean Streamlit components instead
+st.info("NOTE: Before Uploading the Summary Cross-Check it.")
+st.write("Need the base summary first?")
+st.link_button("Go to Spydarr Dashboard", "https://spydarr.streamlit.app/")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 
@@ -115,7 +110,7 @@ if uploaded_file:
                 last_row = len(final_df) + 1
                 last_col = len(final_df.columns)
 
-                # 1. Apply Global Alignment and Borders
+                # 1. Global Alignment and Borders
                 for r in range(1, last_row + 1): 
                     for c in range(1, last_col + 1):
                         cell = ws.cell(row=r, column=c)
@@ -141,15 +136,12 @@ if uploaded_file:
                         if current_prop is not None:
                             end_row_prop = row_num - 1
                             fill = PatternFill(start_color=colors[color_idx % len(colors)], fill_type="solid")
-                            
                             for r_fill in range(start_row_prop, end_row_prop + 1):
                                 for c_fill in range(1, last_col + 1): 
                                     ws.cell(row=r_fill, column=c_fill).fill = fill
-                            
                             if end_row_prop > start_row_prop:
                                 ws.merge_cells(start_row=start_row_prop, start_column=2, end_row=end_row_prop, end_column=2)
                                 ws.merge_cells(start_row=start_row_prop, start_column=last_col, end_row=end_row_prop, end_column=last_col)
-                            
                             color_idx += 1
                         start_row_prop, current_prop = row_num, row_prop
                 
