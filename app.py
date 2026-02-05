@@ -43,8 +43,6 @@ def send_email(recipient_email, excel_data, filename):
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-st.markdown("""
-
     
     st.markdown("<div style='margin-top: -15px; margin-bottom: 10px;'><span style='background-color: #FFFF00; padding: 2px 8px; border-radius: 4px; border: 1px solid #E6E600; font-size: 0.9em; color: black;'><u><strong>NOTE :-</strong> Before Uploading the Summary Cross-Check it.</u></span></div>
     <a href="https://spydarr.streamlit.app/" target="_blank">To get the summary click here: Spydarr Dashboard</a>
