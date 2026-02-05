@@ -45,12 +45,8 @@ st.title("🏙️Spydarr's Summary to Report")
 
 # Fixed Indentation and String Closing here
 st.markdown("""
-<div style='background-color: #f0f2f6; padding: 10px; border-radius: 5px; border-left: 5px solid #ff4b4b; margin-bottom: 20px;'>
-    <div style='margin-bottom: 10px;'>
         <span style='background-color: #FFFF00; padding: 2px 8px; border-radius: 4px; border: 1px solid #E6E600; font-size: 0.9em; color: black;'>
             <u><strong>NOTE :-</strong> Before Uploading the Summary Cross-Check it.</u>
-        </span>
-    </div>
     <strong>Need the base summary first?</strong> 
     <a href="https://spydarr.streamlit.app/" target="_blank">To get the summary click here: Spydarr Dashboard</a>
 </div>
