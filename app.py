@@ -112,33 +112,44 @@ if uploaded_file:
                 last_row = len(final_df) + 1
                 last_col = len(final_df.columns)
 
-                # Global Alignment and Borders
+                # 1. Apply Global Alignment and Borders
                 for r in range(1, last_row + 1): 
                     for c in range(1, last_col + 1):
                         cell = ws.cell(row=r, column=c)
                         cell.alignment = center_align 
                         cell.border = thin_border
 
-                # Merging and Coloring Logic for Location and Property groups
-                current_prop, start_row, color_idx = None, 2, 0
+                # 2. Logic for Merging LOCATION (Column 1)
+                current_loc, start_row_loc = None, 2
+                for row_num in range(2, last_row + 2):
+                    row_loc = ws.cell(row=row_num, column=1).value 
+                    if row_loc != current_loc or row_num == last_row + 1:
+                        if current_loc is not None:
+                            end_row_loc = row_num - 1
+                            if end_row_loc > start_row_loc:
+                                ws.merge_cells(start_row=start_row_loc, start_column=1, end_row=end_row_loc, end_column=1)
+                        start_row_loc, current_loc = row_num, row_loc
+
+                # 3. Logic for Merging PROPERTY (Col 2), TOTAL COUNT (Col 10), and COLORING
+                current_prop, start_row_prop, color_idx = None, 2, 0
                 for row_num in range(2, last_row + 2):
                     row_prop = ws.cell(row=row_num, column=2).value 
                     if row_prop != current_prop or row_num == last_row + 1:
                         if current_prop is not None:
-                            end_row = row_num - 1
+                            end_row_prop = row_num - 1
                             fill = PatternFill(start_color=colors[color_idx % len(colors)], fill_type="solid")
-                            for r_fill in range(start_row, end_row + 1):
+                            
+                            # Color the property group rows
+                            for r_fill in range(start_row_prop, end_row_prop + 1):
                                 for c_fill in range(1, last_col + 1): 
                                     ws.cell(row=r_fill, column=c_fill).fill = fill
                             
-                            if end_row > start_row:
-                                # Merging Location (Col 1), Property (Col 2), and Total Count (Last Col)
-                                ws.merge_cells(start_row=start_row, start_column=1, end_row=end_row, end_column=1)
-                                ws.merge_cells(start_row=start_row, start_column=2, end_row=end_row, end_column=2)
-                                ws.merge_cells(start_row=start_row, start_column=last_col, end_row=end_row, end_column=last_col)
+                            if end_row_prop > start_row_prop:
+                                ws.merge_cells(start_row=start_row_prop, start_column=2, end_row=end_row_prop, end_column=2)
+                                ws.merge_cells(start_row=start_row_prop, start_column=last_col, end_row=end_row_prop, end_column=last_col)
                             
                             color_idx += 1
-                        start_row, current_prop = row_num, row_prop
+                        start_row_prop, current_prop = row_num, row_prop
                 
                 for col in ws.columns: 
                     ws.column_dimensions[col[0].column_letter].width = 20
@@ -154,7 +165,7 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-            
+
 
     except Exception as e:
         st.error(f"Error: {e}")
