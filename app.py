@@ -45,7 +45,7 @@ st.title("🏙️Spydarr's Summary to Report")
 
 # Displaying link as text instead of a button
 st.info("NOTE: Before Uploading the Summary Cross-Check it.")
-st.write("Need the base summary first? To get the summary click here: https://spydarr.streamlit.app/")
+st.write("Need the base summary first? To get the summary click here: https://summarybeyondwalls.streamlit.app/")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 
