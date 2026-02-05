@@ -43,10 +43,9 @@ def send_email(recipient_email, excel_data, filename):
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-# REMOVED BOX: Used clean Streamlit components instead
+# Displaying link as text instead of a button
 st.info("NOTE: Before Uploading the Summary Cross-Check it.")
-st.write("Need the base summary first?")
-st.link_button("Go to Spydarr Dashboard", "https://spydarr.streamlit.app/")
+st.write("Need the base summary first? To get the summary click here: https://spydarr.streamlit.app/")
 
 uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 
@@ -110,7 +109,7 @@ if uploaded_file:
                 last_row = len(final_df) + 1
                 last_col = len(final_df.columns)
 
-                # 1. Global Alignment and Borders
+                # 1. Apply Global Alignment and Borders
                 for r in range(1, last_row + 1): 
                     for c in range(1, last_col + 1):
                         cell = ws.cell(row=r, column=c)
@@ -160,6 +159,9 @@ if uploaded_file:
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
             
+            st.sidebar.download_button(label="📥 Download Excel Report", 
+                                       data=file_content, 
+                                       file_name="Spydarr_Summary_to_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
