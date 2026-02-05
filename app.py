@@ -55,7 +55,6 @@ uploaded_file = st.file_uploader("Upload your Excel file", type=['xlsx'])
 if uploaded_file:
     try:
         xls = pd.ExcelFile(uploaded_file)
-        # Flexible check for "summary" or "Summary" sheet
         target_sheet = next((s for s in xls.sheet_names if s.lower() == 'summary'), None)
         
         if not target_sheet:
@@ -64,14 +63,12 @@ if uploaded_file:
             df = pd.read_excel(xls, sheet_name=target_sheet)
 
             # --- DATA PROCESSING ---
-            # Forward fill the merged columns from your sheet
             df['Location'] = df['Location'].ffill()
             df['Property'] = df['Property'].ffill()
             df['Total Count'] = df['Total Count'].ffill()
             df['Last Completion Date'] = pd.to_datetime(df['Last Completion Date'], dayfirst=True)
             df['weighted_apr_sum'] = df['Average of APR'] * df['Count of Property']
 
-            # Grouping by Location, Property, Date, and Configuration
             report_df = df.groupby(['Location', 'Property', 'Last Completion Date', 'Configuration']).agg({
                 'Carpet Area(SQ.FT)': ['min', 'max'],
                 'Min. APR': 'min',
@@ -81,18 +78,15 @@ if uploaded_file:
                 'Total Count': 'first'
             }).reset_index()
 
-            # Flattening column names
             report_df.columns = ['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                  'min_carpet', 'max_carpet', 'Min APR', 'Max APR', 
                                  'temp_sum_apr', 'Count of Property', 'Total Count']
 
-            # Carpet area logic (single value if min == max)
             report_df['Carpet Area(SQ.FT)'] = report_df.apply(
                 lambda x: str(int(round(x['min_carpet']))) if round(x['min_carpet']) == round(x['max_carpet']) 
                 else f"{int(round(x['min_carpet']))}-{int(round(x['max_carpet']))}", axis=1
             )
 
-            # Accurate Weighted Average and rounding to prevent conversion errors
             report_df['Average of APR'] = (report_df['temp_sum_apr'] / report_df['Count of Property']).fillna(0)
             
             numeric_cols = ['Min APR', 'Max APR', 'Average of APR', 'Count of Property', 'Total Count']
@@ -100,8 +94,6 @@ if uploaded_file:
                 report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
-            
-            # Final column order with Location at the extreme left
             final_df = report_df[['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                   'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 
                                   'Count of Property', 'Total Count']]
@@ -115,23 +107,22 @@ if uploaded_file:
                 center_align = Alignment(horizontal='center', vertical='center')
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
                                      top=Side(style='thin'), bottom=Side(style='thin'))
-                # Professional Spydarr color palette
                 colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
                 
                 last_row = len(final_df) + 1
                 last_col = len(final_df.columns)
 
-                # Apply Global Alignment and Borders (all rows, all columns)
+                # Global Alignment and Borders
                 for r in range(1, last_row + 1): 
                     for c in range(1, last_col + 1):
                         cell = ws.cell(row=r, column=c)
                         cell.alignment = center_align 
                         cell.border = thin_border
 
-                # Logic for Merging Location, Property, and Total Count per Property group
+                # Merging and Coloring Logic for Location and Property groups
                 current_prop, start_row, color_idx = None, 2, 0
                 for row_num in range(2, last_row + 2):
-                    row_prop = ws.cell(row=row_num, column=2).value # Property is column 2
+                    row_prop = ws.cell(row=row_num, column=2).value 
                     if row_prop != current_prop or row_num == last_row + 1:
                         if current_prop is not None:
                             end_row = row_num - 1
@@ -141,9 +132,10 @@ if uploaded_file:
                                     ws.cell(row=r_fill, column=c_fill).fill = fill
                             
                             if end_row > start_row:
-                                ws.merge_cells(start_row=start_row, start_column=1, end_row=end_row, end_column=1) # Location
-                                ws.merge_cells(start_row=start_row, start_column=2, end_row=end_row, end_column=2) # Property
-                                ws.merge_cells(start_row=start_row, start_column=last_col, end_row=end_row, end_column=last_col) # Total Count
+                                # Merging Location (Col 1), Property (Col 2), and Total Count (Last Col)
+                                ws.merge_cells(start_row=start_row, start_column=1, end_row=end_row, end_column=1)
+                                ws.merge_cells(start_row=start_row, start_column=2, end_row=end_row, end_column=2)
+                                ws.merge_cells(start_row=start_row, start_column=last_col, end_row=end_row, end_column=last_col)
                             
                             color_idx += 1
                         start_row, current_prop = row_num, row_prop
@@ -153,7 +145,6 @@ if uploaded_file:
 
             file_content = output.getvalue()
 
-            # --- SIDEBAR: INTERFACE ---
             st.sidebar.divider()
             st.sidebar.header("📧 Email Report")
             recipient = st.sidebar.text_input("Recipient Name", placeholder="firstname.lastname")
@@ -163,7 +154,7 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-    
+            
 
     except Exception as e:
         st.error(f"Error: {e}")
