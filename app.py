@@ -13,7 +13,7 @@ from email import encoders
 # --- EMAIL CONFIGURATION ---
 SENDER_EMAIL = "atharvaujoshi@gmail.com"
 SENDER_NAME = "Spydarr Summary to Report" 
-APP_PASSWORD = "nybl zsnx zvdw edqr"  
+APP_PASSWORD = "nybl zsnx zvdw edqr"   
 
 def send_email(recipient_email, excel_data, filename):
     try:
@@ -43,7 +43,6 @@ def send_email(recipient_email, excel_data, filename):
 st.set_page_config(page_title="Property Report Tool", layout="wide")
 st.title("🏙️Spydarr's Summary to Report")
 
-# Displaying link as text instead of a button
 st.info("NOTE: Before Uploading the Summary Cross-Check it.")
 st.markdown("[To get the Summary click here.](https://summarybeyondwalls.streamlit.app/)")
 
@@ -91,9 +90,11 @@ if uploaded_file:
                 report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
-            # --- SORTING ADDED HERE ---
-            # Sort by Total Count (Descending) and then by Property to keep groups together
+
+            # --- SORTING LOGIC ADDED HERE ---
+            # Sort by Total Count (Descending) then Property to keep clusters clean
             report_df = report_df.sort_values(by=['Total Count', 'Property'], ascending=[False, True])
+
             final_df = report_df[['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                   'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 
                                   'Count of Property', 'Total Count']]
@@ -161,8 +162,6 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-            
-            
 
     except Exception as e:
         st.error(f"Error: {e}")
