@@ -91,6 +91,9 @@ if uploaded_file:
                 report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
+            # --- SORTING ADDED HERE ---
+            # Sort by Total Count (Descending) and then by Property to keep groups together
+            report_df = report_df.sort_values(by=['Total Count', 'Property'], ascending=[False, True])
             final_df = report_df[['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                   'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 
                                   'Count of Property', 'Total Count']]
