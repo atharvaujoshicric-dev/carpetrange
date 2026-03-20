@@ -158,8 +158,7 @@ if uploaded_file:
             file_content = output.getvalue()
 
             # UI Display for convenience
-            st.dataframe(final_df)
-            st.download_button("Download Report", data=file_content, file_name="Market_Report.xlsx")
+            
 
             st.sidebar.divider()
             st.sidebar.header("📧 Email Report")
