@@ -41,7 +41,7 @@ def send_email(recipient_email, excel_data, filename):
 
 # --- STREAMLIT UI SETUP ---
 st.set_page_config(page_title="Property Report Tool", layout="wide")
-st.title("🏙️Spydarr's Summary to Report")
+st.title("🏙️ Spydarr's Summary to Report")
 
 st.info("NOTE: Before Uploading the Summary Cross-Check it.")
 st.markdown("[To get the Summary click here.](https://summarybeyondwalls.streamlit.app/)")
@@ -59,6 +59,8 @@ if uploaded_file:
             df = pd.read_excel(xls, sheet_name=target_sheet)
 
             # --- DATA PROCESSING ---
+            # Ensure 'Micromarket' or 'Location' exists
+            # We use 'Location' as the Micromarket identifier based on your original snippet
             df['Location'] = df['Location'].ffill()
             df['Property'] = df['Property'].ffill()
             df['Total Count'] = df['Total Count'].ffill()
@@ -89,11 +91,12 @@ if uploaded_file:
             for col in numeric_cols:
                 report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
+            # Formating date after aggregation
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
 
-            # --- SORTING LOGIC ADDED HERE ---
-            # Sort by Total Count (Descending) then Property to keep clusters clean
-            report_df = report_df.sort_values(by=['Total Count', 'Property'], ascending=[False, True])
+            # --- UPDATED SORTING LOGIC ---
+            # Sorting by Location (Micromarket) in Descending order, then Property
+            report_df = report_df.sort_values(by=['Location', 'Property'], ascending=[False, True])
 
             final_df = report_df[['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                   'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 
@@ -105,7 +108,7 @@ if uploaded_file:
                 final_df.to_excel(writer, index=False, sheet_name='Report')
                 ws = writer.book['Report']
                 
-                center_align = Alignment(horizontal='center', vertical='center')
+                center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
                                      top=Side(style='thin'), bottom=Side(style='thin'))
                 colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
@@ -121,6 +124,7 @@ if uploaded_file:
                         cell.border = thin_border
 
                 # 2. Logic for Merging LOCATION (Column 1)
+                # This ensures that as Location changes (Micromarkets), they are grouped and merged
                 current_loc, start_row_loc = None, 2
                 for row_num in range(2, last_row + 2):
                     row_loc = ws.cell(row=row_num, column=1).value 
@@ -149,9 +153,13 @@ if uploaded_file:
                         start_row_prop, current_prop = row_num, row_prop
                 
                 for col in ws.columns: 
-                    ws.column_dimensions[col[0].column_letter].width = 20
+                    ws.column_dimensions[col[0].column_letter].width = 22
 
             file_content = output.getvalue()
+
+            # UI Table Preview
+            st.write("### Preview of Processed Report")
+            st.dataframe(final_df)
 
             st.sidebar.divider()
             st.sidebar.header("📧 Email Report")
@@ -162,6 +170,9 @@ if uploaded_file:
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
+
+            # Download Button for manual check
+            st.download_button(label="📥 Download Excel Report", data=file_content, file_name="Market_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
