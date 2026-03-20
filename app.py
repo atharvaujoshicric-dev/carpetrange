@@ -59,8 +59,6 @@ if uploaded_file:
             df = pd.read_excel(xls, sheet_name=target_sheet)
 
             # --- DATA PROCESSING ---
-            # Ensure 'Micromarket' or 'Location' exists
-            # We use 'Location' as the Micromarket identifier based on your original snippet
             df['Location'] = df['Location'].ffill()
             df['Property'] = df['Property'].ffill()
             df['Total Count'] = df['Total Count'].ffill()
@@ -91,12 +89,15 @@ if uploaded_file:
             for col in numeric_cols:
                 report_df[col] = report_df[col].fillna(0).round(0).astype(int)
             
-            # Formating date after aggregation
             report_df['Last Completion Date'] = report_df['Last Completion Date'].dt.strftime('%b-%y')
 
             # --- UPDATED SORTING LOGIC ---
-            # Sorting by Location (Micromarket) in Descending order, then Property
-            report_df = report_df.sort_values(by=['Location', 'Property'], ascending=[False, True])
+            # We sort by Location (Micromarket) first, then Total Count (Descending) 
+            # so the biggest properties in each market appear first.
+            report_df = report_df.sort_values(
+                by=['Location', 'Total Count', 'Property'], 
+                ascending=[True, False, True]
+            )
 
             final_df = report_df[['Location', 'Property', 'Last Completion Date', 'Configuration', 
                                   'Carpet Area(SQ.FT)', 'Min APR', 'Max APR', 'Average of APR', 
@@ -108,7 +109,7 @@ if uploaded_file:
                 final_df.to_excel(writer, index=False, sheet_name='Report')
                 ws = writer.book['Report']
                 
-                center_align = Alignment(horizontal='center', vertical='center', wrap_text=True)
+                center_align = Alignment(horizontal='center', vertical='center')
                 thin_border = Border(left=Side(style='thin'), right=Side(style='thin'), 
                                      top=Side(style='thin'), bottom=Side(style='thin'))
                 colors = ["A2D2FF", "FFD6A5", "CAFFBF", "FDFFB6", "FFADAD", "BDB2FF", "9BF6FF"]
@@ -124,16 +125,15 @@ if uploaded_file:
                         cell.border = thin_border
 
                 # 2. Logic for Merging LOCATION (Column 1)
-                # This ensures that as Location changes (Micromarkets), they are grouped and merged
                 current_loc, start_row_loc = None, 2
                 for row_num in range(2, last_row + 2):
-                    row_loc = ws.cell(row=row_num, column=1).value 
-                    if row_loc != current_loc or row_num == last_row + 1:
+                    row_val = ws.cell(row=row_num, column=1).value 
+                    if row_val != current_loc or row_num == last_row + 1:
                         if current_loc is not None:
                             end_row_loc = row_num - 1
                             if end_row_loc > start_row_loc:
                                 ws.merge_cells(start_row=start_row_loc, start_column=1, end_row=end_row_loc, end_column=1)
-                        start_row_loc, current_loc = row_num, row_loc
+                        start_row_loc, current_loc = row_num, row_val
 
                 # 3. Logic for Merging PROPERTY (Col 2), TOTAL COUNT (Col 10), and COLORING
                 current_prop, start_row_prop, color_idx = None, 2, 0
@@ -153,26 +153,23 @@ if uploaded_file:
                         start_row_prop, current_prop = row_num, row_prop
                 
                 for col in ws.columns: 
-                    ws.column_dimensions[col[0].column_letter].width = 22
+                    ws.column_dimensions[col[0].column_letter].width = 20
 
             file_content = output.getvalue()
 
-            # UI Table Preview
-            st.write("### Preview of Processed Report")
+            # UI Display for convenience
             st.dataframe(final_df)
+            st.download_button("Download Report", data=file_content, file_name="Market_Report.xlsx")
 
             st.sidebar.divider()
             st.sidebar.header("📧 Email Report")
-            recipient = st.sidebar.text_input("Recipient Name", placeholder="firstname.lastname")
+            recipient = st.sidebar.text_input("Recipient Username", placeholder="firstname.lastname")
             
             if st.sidebar.button("Send to Email") and recipient:
                 full_email = f"{recipient.strip().lower()}@beyondwalls.com"
                 with st.spinner(f'Sending to {full_email}...'):
                     if send_email(full_email, file_content, "Spydarr_Summary_to_Report.xlsx"):
                         st.sidebar.success(f"Report sent to {full_email}")
-
-            # Download Button for manual check
-            st.download_button(label="📥 Download Excel Report", data=file_content, file_name="Market_Report.xlsx")
 
     except Exception as e:
         st.error(f"Error: {e}")
